@@ -1,0 +1,14 @@
+version: '3.7'
+
+services:
+  mongodb:
+    image: 'docker.io/bitnami/mongodb:latest'
+    ports:
+      - "27017:27017"
+    volumes:
+      - 'mongodb_data:/bitnami/mongodb'
+    container_name: db-recettes
+
+volumes:
+  mongodb_data:
+    driver: local
