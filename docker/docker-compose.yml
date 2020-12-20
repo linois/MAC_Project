@@ -2,13 +2,14 @@ version: '3.7'
 
 services:
   mongodb:
-    image: 'docker.io/bitnami/mongodb:latest'
-    ports:
-      - "27017:27017"
+    image: 'mongo'
+    container_name: 'db-recettes'
+    environment:
+      - MONGO_INITDB_DATABASE=db-recettes
+      - MONGO_INITDB_ROOT_USERNAME=mac_user
+      - MONGO_INITDB_ROOT_PASSWORD=mac_project_2020
     volumes:
-      - 'mongodb_data:/bitnami/mongodb'
-    container_name: db-recettes
-
-volumes:
-  mongodb_data:
-    driver: local
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./mongo-volume:/data/db
+    ports:
+      - "27017-27019:27017-27019"
