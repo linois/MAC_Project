@@ -1,0 +1,2 @@
+rank.int32(),name.string(),description.string(),ingredients.json(),steps.string(),duration.int32(),vegetarian.bool()
+1,steak frites,plat typique composé d'un steak grillé avec des frites,"[{""nom"":""viande de boeuf"",""quantite"":""200g""},{""nom"":""pomme de terre"",""quantite"":3}]","peler et couper les patates,faire frire les frites,assaisonner la viande,griller la viande,saler les frites,servir chaud sur une assiette",20,false
