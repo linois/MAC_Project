@@ -24,10 +24,11 @@ class DocumentDAO {
     return this.client.close();
   }
 
-  insertRecipe(movie) {
-    return this.collection.insertOne(movie);
+  insertRecipe(recipe) {
+    return this.collection.insertOne(recipe);
   }
 
+  //TODO augmenter le nombre retourné
   getRecipes(search) {
     return this.collection.find({ 'name': new RegExp(search) }).limit(1).toArray();
   }

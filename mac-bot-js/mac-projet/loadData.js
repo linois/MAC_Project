@@ -78,15 +78,14 @@ documentDAO.init().then(() => {
 
             // Retrieve all ingredient from all recipes, split them and assign a numeric id
             console.log('Calculating ingredient');
-            console.log(recipes[0].ingredients);
-            const ingredients = [...new Set(recipes.flatMap((it) => it.ingredients.split(',').map(it => it.trim())))].map((it, i) => [i, it]);
+            const ingredients = [...new Set(recipes.flatMap((it) => it.ingredients.split(',').map((it) => it.split(':')[0]).map(it => it.trim())))].map((it, i) => [i, it]);
             
             console.log('Handling recipe insertion in Neo4j');
             const recipesBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
             recipesBar.start(recipes.length, 0);
 
             Promise.all(recipes.map((recipe) => new Promise((resolve1) => {
-              const recipeIngredients = recipe.ingredients.split(',').map(i => i.trim());
+              const recipeIngredients = recipe.ingredients.split(',').map((it) => it.split(':')[0]).map(i => i.trim());
 
               graphDAO.upsertRecipe(recipe._id, recipe.name).then(() => {
                 // Update ingredient <-> recipe links
