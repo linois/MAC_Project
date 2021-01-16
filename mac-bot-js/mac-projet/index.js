@@ -113,29 +113,27 @@ bot.command('start', (ctx) => {
 
 bot.command('searchByIngredient', (ctx) => {
   const ingredients = ctx.message.text.substr(20).split(',');
-  console.log(ingredients);
   for (ingredientName of ingredients) {
-    console.log(ingredientName);
     graphDAO.getRecipeByIngredient(ingredientName).then( (recipeIds) => {
-      console.log(recipeIds);
-      documentDAO.getRecipeById(recipeIds[0]).then( (recipe) => {
-        if (recipe == null) {
-          ctx.reply("cet ingredient n'est utilisé dans aucune de nos recettes"); 
-        } else {
-          console.log(recipe);
-          const answer = {
-            input_message_content: {
-              message_text: stripMargin`
-                |Name: ${recipe.name}
-                |Description: ${recipe.description}
-                |Vegetarian: ${recipe.is_vege ? "oui" : "non"}
-              `
-            },
-          };
-          console.log(answer);
-          ctx.reply(answer); 
-        }
-      })
+      for (const recipeId of recipeIds) {
+        documentDAO.getRecipeById(recipeId).then( (recipe) => {
+          if (recipe == null) {
+            ctx.reply("cet ingredient n'est utilisé dans aucune de nos recettes"); 
+          } else {
+            const answer = {
+              input_message_content: {
+                message_text: stripMargin`
+                  |Name: ${recipe.name}
+                  |Description: ${recipe.description}
+                  |Vegetarian: ${recipe.is_vege ? "oui" : "non"}
+                `
+              },
+            };
+            console.log(answer);
+            ctx.reply(answer); 
+          }
+        })
+      }
     }); 
   }
 });
@@ -170,15 +168,57 @@ bot.command('searchRecipeLong', (ctx) => {
 });
 
 bot.command('searchFamousRecipe', (ctx) => {
-  ctx.reply('heu');
+  //todo augmenter le top
+  graphDAO.getTopFamousRecipes(1).then( (recipes) => {
+    for (const elem in recipes) {
+      documentDAO.getRecipeById(elem['recipeId']).then( (recipe) => {
+        if (recipe == null) {
+          ctx.reply("cet ingredient n'est utilisé dans aucune de nos recettes"); 
+        } else {
+          const answer = stripMargin`
+                |Name: ${recipe.name}
+                |Description: ${recipe.description}
+                |Moyenne: ${elem.avg}/5 ★
+                |Vegetarian: ${recipe.is_vege ? "oui" : "non"}
+              `;
+          ctx.reply(answer); 
+        }
+      })
+    }
+  }); 
+
 });
 
 bot.command('searchLikedRecipe', (ctx) => {
-  ctx.reply('heu');
+  graphDAO.getRecipeLiked().then( (recipeIds) => {
+    console.log(recipeIds);
+    documentDAO.getRecipeById(recipeIds[0]).then( (recipe) => {
+      if (recipe == null) {
+        ctx.reply("vous n'avez aimé aucune recette"); 
+      } else {
+        const answer = {
+          input_message_content: {
+            message_text: stripMargin`
+              |Name: ${recipe.name}
+              |Description: ${recipe.description}
+              |Vegetarian: ${recipe.is_vege ? "oui" : "non"}
+            `
+          },
+        };
+        ctx.reply(answer); 
+      }
+    })
+  }); 
 });
 
-bot.command('setVegan', (ctx) => {
-  ctx.reply('heu');
+bot.command('toggleVegan', (ctx) => {
+  if (!ctx.from || !ctx.from.id) {
+    ctx.reply('We cannot guess who you are');
+  } else {
+    ctx.from.is_vege = !ctx.from.is_vege;
+    graphDAO.upsertUser(ctx.from);
+    ctx.reply(`l'option végétarien a été ${res.is_vege ? '' : 'dés'}activé !`);
+  }
 });
 
 bot.command('recommendrecipes', (ctx) => {
@@ -198,7 +238,6 @@ bot.command('recommendrecipes', (ctx) => {
     });
   }
 });
-
 
 // Initialize mongo connexion
 // before starting bot

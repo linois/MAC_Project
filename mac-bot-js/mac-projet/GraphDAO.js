@@ -45,6 +45,25 @@ class GraphDAO {
     });
   }
 
+  getTopRecipeLiked(userId, nb) {
+    return this.run('MATCH (:User{id: $userId})-[l:LIKED]-(r:Recipe) RETURN r,l ORDER BY l.rank AND l.at DESC LIMIT $nb', {
+      userId,
+      nb,
+    }).then((res) => {
+      if (res.records.length === 0) {
+        return null;
+      } else {
+        return res.records.map( record => {
+          return {
+            recipeId: record.get('r').properties.id,
+            rank: record.get('l').properties.rank,
+            at: record.get('l').properties.at,
+          };
+        });
+      }
+    });
+  }
+
   getRecipeLiked(userId, recipeId) {
     return this.run('MATCH (:User{id: $userId})-[l:LIKED]-(:Recipe{id: $recipeId}) RETURN l', {
       userId,
@@ -61,7 +80,23 @@ class GraphDAO {
     });
   }
 
-  getRecipeByIngredient(ingredientName) {
+  getTopFamousRecipes(topSize) {
+    return this.run('MATCH (:User)-[l:LIKED]-(r:Recipe) WITH r, sum(l.rank) AS vote, avg(l.rank) AS avg RETURN r, avg ORDER BY vote DESC LIMIT $topSize', {
+      topSize,
+    }).then((res) => {
+      if (res.records.length === 0) return null;
+      else {
+        return res.records.map( record => {
+          return {
+            recipeId: record.get('r').properties.id,
+            avg: record.get('avg'),
+          }
+        });
+      }
+    });
+  }
+
+  getRecipesByIngredient(ingredientName) {
     return this.run('MATCH (:Ingredient{name: $ingredientName})-[:USE]-(r:Recipe) RETURN r', {
       ingredientName,
     }).then((res) => {
@@ -73,7 +108,7 @@ class GraphDAO {
   }
 
   upsertRecipe(recipeId, recipeName) {
-    return this.run('MERGE (m:Recipe{id: $recipeId}) ON CREATE SET m.name = $recipeName RETURN m', {
+    return this.run('MERGE (r:Recipe{id: $recipeId}) ON CREATE SET r.name = $recipeName RETURN r', {
       recipeId,
       recipeName,
     })

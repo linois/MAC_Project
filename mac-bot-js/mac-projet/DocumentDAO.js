@@ -1,4 +1,4 @@
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectID  } = require('mongodb');
 
 class DocumentDAO {
 
@@ -34,7 +34,7 @@ class DocumentDAO {
   }
 
   getRecipeById(id) {
-    return this.collection.findOne({ _id: id });
+    return this.collection.findOne({ _id: new ObjectID(id) });
   }
 
   getRecipeByDuration( min = 0, max) {
