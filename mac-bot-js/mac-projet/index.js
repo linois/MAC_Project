@@ -29,16 +29,18 @@ function buildLikeKeyboard(recipeId, currentLike) {
 
 // User is using the inline query mode on the bot
 bot.on('inline_query', (ctx) => {
-  function printArray(json){
-    text = "\n";
-    for( i = 0; i < json.length; i++){
-      text += JSON.stringify(json[i]) + "\n";
+  function printArray(array){
+    
+    text = "\n\t";
+    for( i = 0; i < array.length; i++){
+      text += array[i] + "\n\t";
     }
     
     return text += "\n";
   }
   const query = ctx.inlineQuery;
   if (query) {
+    console.log(query)
     documentDAO.getRecipes(query.query).then((recipes) => {
       const answer = recipes.map((recipe) => ({
         id: recipe._id,
@@ -50,12 +52,14 @@ bot.on('inline_query', (ctx) => {
           message_text: stripMargin`
             |Name: ${recipe.name}
             |Description: ${recipe.description}
-            |Ingredients: ${printArray(recipe.ingredients)}
+            |Ingredients: ${printArray(recipe.ingredients.split(","))}
             |Steps: ${printArray(recipe.steps.split(","))}
             |Vegetarian: ${recipe.is_vege ? "oui" : "non"}
+            |Temps de préparation: ${recipe.duration} min
           `
         },
       }));
+      console.log(answer);
       ctx.answerInlineQuery(answer);  
     });
   }
@@ -107,7 +111,73 @@ bot.command('start', (ctx) => {
   ctx.reply('HEIG-VD Mac project - a recipes bot 2');
 });
 
-bot.command('search', (ctx) => {
+bot.command('searchByIngredient', (ctx) => {
+  const ingredients = ctx.message.text.substr(20).split(',');
+  console.log(ingredients);
+  for (ingredientName of ingredients) {
+    console.log(ingredientName);
+    graphDAO.getRecipeByIngredient(ingredientName).then( (recipeIds) => {
+      console.log(recipeIds);
+      documentDAO.getRecipeById(recipeIds[0]).then( (recipe) => {
+        if (recipe == null) {
+          ctx.reply("cet ingredient n'est utilisé dans aucune de nos recettes"); 
+        } else {
+          console.log(recipe);
+          const answer = {
+            input_message_content: {
+              message_text: stripMargin`
+                |Name: ${recipe.name}
+                |Description: ${recipe.description}
+                |Vegetarian: ${recipe.is_vege ? "oui" : "non"}
+              `
+            },
+          };
+          console.log(answer);
+          ctx.reply(answer); 
+        }
+      })
+    }); 
+  }
+});
+
+function searchRecipeByDuration(ctx, min,max) {
+  documentDAO.getRecipeByDuration(min,max).then( (recipes) => {
+    if (recipes.length === 0) {
+      ctx.reply("aucune de nos recettes est dans cette catégorie de temps"); 
+    } else {
+      for (const recipe of recipes) {
+        const answer = stripMargin`
+              |Name: ${recipe.name}
+              |Description: ${recipe.description}
+              |Vegetarian: ${recipe.is_vege ? "oui" : "non"}
+            `;
+        ctx.reply(answer); 
+      }
+    }
+  })
+}
+
+bot.command('searchRecipeShort', (ctx) => {
+  searchRecipeByDuration(ctx,0,20);
+});
+
+bot.command('searchRecipeMedium', (ctx) => {
+  searchRecipeByDuration(ctx,21,60);
+});
+
+bot.command('searchRecipeLong', (ctx) => {
+  searchRecipeByDuration(ctx,61,null);
+});
+
+bot.command('searchFamousRecipe', (ctx) => {
+  ctx.reply('heu');
+});
+
+bot.command('searchLikedRecipe', (ctx) => {
+  ctx.reply('heu');
+});
+
+bot.command('setVegan', (ctx) => {
   ctx.reply('heu');
 });
 

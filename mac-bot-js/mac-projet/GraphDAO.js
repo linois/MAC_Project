@@ -61,6 +61,17 @@ class GraphDAO {
     });
   }
 
+  getRecipeByIngredient(ingredientName) {
+    return this.run('MATCH (:Ingredient{name: $ingredientName})-[:USE]-(r:Recipe) RETURN r', {
+      ingredientName,
+    }).then((res) => {
+      if (res.records.length === 0) return null;
+      else {
+        return res.records.map( record => record.get('r').properties.id);
+      }
+    });
+  }
+
   upsertRecipe(recipeId, recipeName) {
     return this.run('MERGE (m:Recipe{id: $recipeId}) ON CREATE SET m.name = $recipeName RETURN m', {
       recipeId,

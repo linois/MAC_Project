@@ -37,6 +37,12 @@ class DocumentDAO {
     return this.collection.findOne({ _id: id });
   }
 
+  getRecipeByDuration( min = 0, max) {
+    return this.collection.find().sort({duration:1}).toArray().then((result) => {
+      return result.filter((it) => (it.duration >= min && ( max == null || it.duration <= max)));
+    });
+  }
+
   getRandomRecipes(n) {
     return this.collection.find().limit(n).toArray();
   }
