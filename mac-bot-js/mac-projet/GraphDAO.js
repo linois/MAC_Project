@@ -366,25 +366,21 @@ class GraphDAO {
   recommendRecipesByIngredient(userId, nb) {
     return this.run(`
       MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(i:Ingredient)
-      MATCH (i:Ingredient)<-[:USE]-(r:Recipe)
-      WHERE r.id <> rl.id
-      RETURN r
+      MATCH (r:Recipe)-[:USE]->(i:Ingredient)
+      WHERE r <> rl AND l.rank > 3
+      RETURN DISTINCT r.name AS recipe,count(rl) AS nbIngredientShared
+      ORDER BY nbIngredientShared DESC
+      LIMIT $nb
     `, {
       userId,
       nb,
     }).then((res) => {
-      console.log(res.records);
-      for (const record of res.records) {
-        console.log(record.get('r'));
-      }
-      
-      /*
       return res.records.map( record => {
         return {
-          recipe: record.get('r').properties,
-          count: record.get('count'),
+          recipe: record.get('recipe'),
+          count: record.get('nbIngredientShared'),
         }
-      });*/
+      });
     });
   }
 

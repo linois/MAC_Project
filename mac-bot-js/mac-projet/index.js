@@ -238,20 +238,15 @@ bot.command('recommendRecipes', (ctx) => {
     ctx.reply('We cannot guess who you are');
   } else {
     //augmenter nombre
-    graphDAO.recommendRecipesByIngredient(ctx.from.id, 2).then((records) => {
-      ctx.reply("heu");
-      /*
+    graphDAO.recommendRecipesByIngredient(ctx.from.id, 5).then((records) => {
       if (records.length === 0) {
-        ctx.reply("You haven't liked enough recipes or ingredients to have recommendations");
+        ctx.reply("You haven't liked any recipes");
       } else {
         const recipesList = records.map((record) => {
-          const name = record.get('r').properties.name;
-          const count = record.get('count(*)').toInt();//nb ingredient commun avec recipe liked
-          //célébrité
-          return `${name} (${count})`;
+          return `${record.recipe} (${record.count})`;//TODO ajouté de célébrité
         }).join("\n\t");
         ctx.reply(`Based your like and dislike we recommend the following recipes:\n\t${recipesList}`);
-      }*/
+      }
     });
   }
 });

@@ -81,13 +81,13 @@ documentDAO.init().then(() => {
             const ingredients = [...new Set(recipes.flatMap((it) => it.ingredients.split(',').map((it) => it.split(':')[0]).map(it => it.trim())))].map((it, i) => [i, it]);
 
             console.log('Handling ingredient insertion in Neo4j');
-            const ingredientBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
-            ingredientBar.start(ingredients.length, 0);
+            //const ingredientBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+            //ingredientBar.start(ingredients.length, 0);
 
-            Promise.all(ingredients.map(([id,name]) => new Promise((resolve1) => {
+            Promise.all(ingredients.map(([id,name]) => new Promise((resolve2) => {
               graphDAO.upsertIngredient(id, name).then(() => {
-                ingredientBar.increment();
-                resolve1();
+                //ingredientBar.increment();
+                resolve2();
               });
             }))).then(() => {
               console.log('Handling recipe insertion in Neo4j');
