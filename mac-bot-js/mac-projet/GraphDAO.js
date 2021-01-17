@@ -145,10 +145,11 @@ class GraphDAO {
    * @param {*} recipeId : id de la recette
    * @param {*} recipeName : nom de la recette
    */
-  upsertRecipe(recipeId, recipeName) {
-    return this.run('MERGE (r:Recipe{id: $recipeId}) ON CREATE SET r.name = $recipeName', {
+  upsertRecipe(recipeId, recipeName, isVege) {
+    return this.run('MERGE (r:Recipe{id: $recipeId}) ON CREATE SET r.name = $recipeName, r.isVege = $isVege', {
       recipeId,
       recipeName,
+      isVege,
     })
   }
 
@@ -220,21 +221,28 @@ class GraphDAO {
     });
   }
 
-/*
+
+  /**
+   * fonction qui ajoute ou modifie une relation ADDED entre un utilisateur et une recette
+   * 
+   * @param {*} userId : id de l'utilisateur
+   * @param {*} recipeId : id de l'utilisateur
+   * @param {*} added : contient les attribut de la relation
+   */
   upsertAdded(userId, recipeId, added) {
     return this.run(`
       MATCH (r:Recipe{ id: $recipeId })
       MATCH (u:User{ id: $userId })
-      MERGE (u)-[r:ADDED]->(m)
-        ON CREATE SET r.at = $at
-        ON MATCH SET  r.at = $at
+      MERGE (u)-[a:ADDED]->(r)
+        ON CREATE SET a.at = $at
+        ON MATCH SET  a.at = $at
     `, {
       userId: this.toInt(userId),
       recipeId,
       at: this.toDate(added.at),
     });
   }
-*/
+
   /**
    * fonction qui ajoute ou modifie une relation LIKED
    * 
@@ -334,34 +342,18 @@ class GraphDAO {
 
   recommendRecipesByFriendTaste(userId, nb) {
     return this.run(`
-        MATCH (:User{id: $userId})-[:KNOW]->(friend:User)-[l:LIKED]->(r2:Recipe)
-        WITH r, size((rl)-[:USE]->(:Ingredient)<-[:USE]-(r)) AS nbIngredientShared
-        WHERE l.rank > 3
-        RETURN r, nbIngredientShared
-        ORDER BY nbIngredientShared DESC
-        LIMIT $nb
-      `, {
-        userId,
-        nb,
+    `, {
+      userId,
+      nb,
     }).then((res) => {
-      console.log(res.records);
-      /*
       return res.records.map( record => {
         return {
-          recipe: record.get('r').properties,
-          count: record.get('count'),
+          recipe: record.get('recipe'),
+          count: record.get('nbIngredientShared'),
         }
-      });*/
+      });
     });
   }
-  /*
-        MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(:Ingredient)<-[:USE]-(r:recipe)
-      WITH r, size((rl)-[:USE]->(:Ingredient)<-[:USE]-(r)) AS nbIngredientShared
-      WHERE l.rank > 3
-      RETURN r, nbIngredientShared
-      ORDER BY nbIngredientShared DESC
-      LIMIT $nb
-      */
 
   recommendRecipesByIngredient(userId, nb) {
     return this.run(`
