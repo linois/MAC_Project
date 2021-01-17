@@ -46,25 +46,28 @@ bot.on('inline_query', (ctx) => {
   }
   const query = ctx.inlineQuery;
   if (query) {
-    documentDAO.getRecipes(query.query, 5).then((recipes) => {
-      const answer = recipes.map((recipe) => ({
-        id: recipe._id,
-        type: 'article',
-        title: recipe.name,
-        description: recipe.description,
-        reply_markup: buildLikeKeyboard(recipe._id),
-        input_message_content: {
-          message_text: stripMargin`
-            |Name: ${recipe.name}
-            |Description: ${recipe.description}
-            |Ingredients: ${printArray(recipe.ingredients.split(","))}
-            |Steps: ${printArray(recipe.steps.split(","))}
-            |Vegetarian: ${recipe.isVege ? "oui" : "non"}
-            |Temps de préparation: ${recipe.duration} min
-          `
-        },
-      }));
-      ctx.answerInlineQuery(answer);  
+    graphDAO.getUser(ctx.from.id).then( (user) => {
+      console.log(user);
+      documentDAO.getRecipes(query.query, user.isVege, 5).then((recipes) => {
+        const answer = recipes.map((recipe) => ({
+          id: recipe._id,
+          type: 'article',
+          title: recipe.name,
+          description: recipe.description,
+          reply_markup: buildLikeKeyboard(recipe._id),
+          input_message_content: {
+            message_text: stripMargin`git
+              |Name: ${recipe.name}
+              |Description: ${recipe.description}
+              |Ingredients: ${printArray(recipe.ingredients.split(","))}
+              |Steps: ${printArray(recipe.steps.split(","))}
+              |Vegetarian: ${recipe.isVege ? "oui" : "non"}
+              |Temps de préparation: ${recipe.duration} min
+            `
+          },
+        }));
+        ctx.answerInlineQuery(answer);  
+      });
     });
   }
 });
