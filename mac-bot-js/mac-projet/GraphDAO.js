@@ -81,7 +81,7 @@ class GraphDAO {
   }
 
   getTopFamousRecipes(topSize) {
-    return this.run('MATCH (:User)-[l:LIKED]-(r:Recipe) WITH r, sum(l.rank) AS vote, avg(l.rank) AS avg RETURN r, avg ORDER BY vote DESC LIMIT $topSize', {
+    return this.run('MATCH (:User)-[l:LIKED]-(r:Recipe) RETURN r, count(l.rank) AS vote, avg(l.rank) AS avg ORDER BY avg DESC LIMIT $topSize', {
       topSize,
     }).then((res) => {
       if (res.records.length === 0) return null;
@@ -90,6 +90,7 @@ class GraphDAO {
           return {
             recipeId: record.get('r').properties.id,
             avg: record.get('avg'),
+            nbVote: record.get('vote'),
           }
         });
       }
@@ -257,15 +258,28 @@ class GraphDAO {
     });
   }
 
-  recommendRecipes(userId) {
+  recommendRecipes(userId, nb) {
    return this.run(`
-      match (u:User{id: $userId})-[l:LIKED]->(r:Recipe)
-      return r, count(*)
-      order by count(*) desc
-      limit 5
+      MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(:Ingredient)<-[:USE]-(r:recipe)
+      WITH r, size((rl)-[:USE]->(:Ingredient)<-[:USE]-(r)) AS nbIngredientShared
+      WHERE l.rank > 3
+      RETURN r, nbIngredientShared
+      ORDER BY nbIngredientShared DESC
+      LIMIT $nb
     `, {
-      userId
-    }).then((result) => result.records);
+      userId,
+      nb,
+    }).then((res) => {
+      console.log(res.records);
+
+      /*
+      return res.records.map( record => {
+        return {
+          recipe: record.get('r').properties,
+          count: record.get('count'),
+        }
+      });*/
+    });
   }
 
   toDate(value) {

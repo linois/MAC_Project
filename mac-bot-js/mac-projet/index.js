@@ -16,6 +16,12 @@ function stripMargin(template, ...expressions) {
   return result.replace(/(\n|\r|\r\n)\s*\|/g, '$1');
 }
 
+/**
+ * fonction qui affiche des messages cliquable
+ * 
+ * @param {*} recipeId : l'id de la recette
+ * @param {*} currentLike : apréciation actuelle
+ */
 function buildLikeKeyboard(recipeId, currentLike) {
   return {
     inline_keyboard: [
@@ -106,7 +112,7 @@ Use inline queries to ...
 });
 
 bot.command('start', (ctx) => {
-  ctx.reply('HEIG-VD Mac project - a recipes bot 2');
+  ctx.reply('HEIG-VD Mac project - a recipe bot');
 });
 
 bot.command('searchByIngredient', (ctx) => {
@@ -172,6 +178,7 @@ bot.command('searchFamousRecipe', (ctx) => {
                 |Name: ${recipe.name}
                 |Description: ${recipe.description}
                 |Moyenne: ${record.avg}/5 ★
+                |Votes: ${record.nbVote}
                 |Vegetarian: ${recipe.isVege ? "oui" : "non"}
               `;
           ctx.reply(answer); 
@@ -218,16 +225,19 @@ bot.command('recommendrecipes', (ctx) => {
   if (!ctx.from || !ctx.from.id) {
     ctx.reply('We cannot guess who you are');
   } else {
-    graphDAO.recommendRecipes(ctx.from.id).then((records) => {
-      if (records.length === 0) ctx.reply("You haven't liked enough recipes or ingredients to have recommendations");
-      else {
+    //augmenter nombre
+    graphDAO.recommendRecipes(ctx.from.id, 1).then((records) => {/*
+      if (records.length === 0) {
+        ctx.reply("You haven't liked enough recipes or ingredients to have recommendations");
+      } else {
         const recipesList = records.map((record) => {
           const name = record.get('r').properties.name;
-          const count = record.get('count(*)').toInt();
+          const count = record.get('count(*)').toInt();//nb ingredient commun avec recipe liked
+          //célébrité
           return `${name} (${count})`;
         }).join("\n\t");
         ctx.reply(`Based your like and dislike we recommend the following recipes:\n\t${recipesList}`);
-      }
+      }*/
     });
   }
 });
