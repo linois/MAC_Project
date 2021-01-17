@@ -64,7 +64,6 @@ bot.on('inline_query', (ctx) => {
           `
         },
       }));
-      console.log(ctx);
       ctx.answerInlineQuery(answer);  
     });
   }
@@ -97,7 +96,6 @@ bot.on('callback_query', (ctx) => {
       username: 'unknown',
       ...ctx.from,
     }, recipeId, liked).then(() => {
-      console.log(ctx.from);
       ctx.editMessageReplyMarkup(buildLikeKeyboard(recipeId, liked));
     }); 
   }
@@ -235,12 +233,14 @@ bot.command('toggleVegan', (ctx) => {
 });
 
 //commande pour recevoir une recommandation
-bot.command('recommendrecipes', (ctx) => {
+bot.command('recommendRecipes', (ctx) => {
   if (!ctx.from || !ctx.from.id) {
     ctx.reply('We cannot guess who you are');
   } else {
     //augmenter nombre
-    graphDAO.recommendRecipesByFriendTaste(ctx.from.id, 2).then((records) => {/*
+    graphDAO.recommendRecipesByIngredient(ctx.from.id, 2).then((records) => {
+      ctx.reply("heu");
+      /*
       if (records.length === 0) {
         ctx.reply("You haven't liked enough recipes or ingredients to have recommendations");
       } else {

@@ -146,27 +146,39 @@ class GraphDAO {
    * @param {*} recipeName : nom de la recette
    */
   upsertRecipe(recipeId, recipeName) {
-    return this.run('MERGE (r:Recipe{id: $recipeId}) ON CREATE SET r.name = $recipeName RETURN r', {
+    return this.run('MERGE (r:Recipe{id: $recipeId}) ON CREATE SET r.name = $recipeName', {
       recipeId,
       recipeName,
     })
   }
 
   /**
-   * fonction qui ajoute ou modifie un noeud recette
-   * @param {*} recipeId : id de la recette
-   * @param {*} ingredient : contient attributs d'un ingrédient
+   * fonction qui ajoute ou modifie un ingrédient
+   * 
+   * @param {*} ingredientId : id de l'ingrédient
+   * @param {*} ingredientName : nom de l'ingrédient
    */
-  upsertIngredient(recipeId, ingredient) {
+  upsertIngredient( ingredientId, ingredientName) {
+    return this.run(`MERGE (i:Ingredient{id: $ingredientId}) ON CREATE SET i.name = $ingredientName`, {
+      ingredientId,
+      ingredientName
+    });
+  }
+
+  /**
+   * fonction qui ajoute ou modifie une relation USE
+   * 
+   * @param {*} recipeId : id de la recette
+   * @param {*} ingredientId : contient attributs d'un ingrédient
+   */
+  upsertRecipeUseIngredient(recipeId, ingredientId) {
     return this.run(`
       MATCH (r:Recipe{ id: $recipeId })
-      MERGE (i:Ingredient{id: $ingredientId})
-        ON CREATE SET i.name = $ingredientName
+      MATCH (i:Ingredient{id: $ingredientId})
       MERGE (r)-[:USE]->(i)
     `, {
       recipeId,
-      ingredientId: ingredient.id,
-      ingredientName: ingredient.name,
+      ingredientId
     });
   }
 
@@ -342,21 +354,30 @@ class GraphDAO {
       });*/
     });
   }
-
-  recommendRecipesByIngredient(userId, nb) {
-    return this.run(`
-      MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(:Ingredient)<-[:USE]-(r1:recipe)
+  /*
+        MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(:Ingredient)<-[:USE]-(r:recipe)
       WITH r, size((rl)-[:USE]->(:Ingredient)<-[:USE]-(r)) AS nbIngredientShared
       WHERE l.rank > 3
       RETURN r, nbIngredientShared
       ORDER BY nbIngredientShared DESC
       LIMIT $nb
+      */
+
+  recommendRecipesByIngredient(userId, nb) {
+    return this.run(`
+      MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(i:Ingredient)
+      MATCH (i:Ingredient)<-[:USE]-(r:Recipe)
+      WHERE r.id <> rl.id
+      RETURN r
     `, {
       userId,
       nb,
     }).then((res) => {
       console.log(res.records);
-
+      for (const record of res.records) {
+        console.log(record.get('r'));
+      }
+      
       /*
       return res.records.map( record => {
         return {
