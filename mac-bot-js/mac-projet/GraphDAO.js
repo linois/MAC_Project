@@ -36,9 +36,9 @@ class GraphDAO {
                         l.at = $likedAt
     `, {
       recipeId,
-      isBot: user.is_bot,
+      isBot: user.isBot,
       username: user.username,
-      isVege: user.is_vege,
+      isVege: user.isVege,
       userId: this.toInt(user.id),
       likedRank: liked.rank,
       likedAt: this.toDate(liked.at),
@@ -46,7 +46,7 @@ class GraphDAO {
   }
 
   getTopRecipeLiked(userId, nb) {
-    return this.run('MATCH (:User{id: $userId})-[l:LIKED]-(r:Recipe) RETURN r,l ORDER BY l.rank AND l.at DESC LIMIT $nb', {
+    return this.run('MATCH (:User{id: $userId})-[l:LIKED]-(r:Recipe) RETURN r,l ORDER BY l.rank DESC LIMIT $nb', {
       userId,
       nb,
     }).then((res) => {
@@ -127,6 +127,17 @@ class GraphDAO {
     });
   }
 
+  getUser(userId){
+    return this.run(`MATCH (u:User{ id: $userId }) RETURN u`, {
+      userId,
+    }).then((res) => {
+      if (res.records.length === 0) return null;
+      else {
+        return res.records[0].get('u').properties;
+      }
+    });
+  }
+
   upsertUser(user) {
     return this.run(`
       MERGE (u:User {id: $userId})
@@ -139,8 +150,8 @@ class GraphDAO {
     `, {
       userId: this.toInt(user.id),
       username: user.username,
-      isVege: user.is_vege,
-      isBot: user.is_bot,
+      isVege: user.isVege,
+      isBot: user.isBot,
     });
   }
 

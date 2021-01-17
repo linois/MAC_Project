@@ -9,11 +9,11 @@ const GraphDAO = require('./GraphDAO');
 
 dotenv.config();
 
-const buildUser = (id, username, is_vege, is_bot) => ({
+const buildUser = (id, username, isVege, isBot) => ({
   id,
   username,
-  is_vege,
-  is_bot
+  isVege,
+  isBot
 });
 
 const shuffle = (array) => {
