@@ -8,6 +8,9 @@ class DocumentDAO {
     this.collection = null;
   }
 
+  /**
+   * initialise la connexion à la db et à la bonne collection
+   */
   init() {
     return new Promise((resolve) => {
       MongoClient.connect(`mongodb://root:toor@${process.env.DOCUMENTDB_HOST}/?authSource=admin`, (err, client) => {
@@ -24,29 +27,63 @@ class DocumentDAO {
     return this.client.close();
   }
 
+  /**
+   * insère une recette dans la db
+   * 
+   * @param {*} recipe : la recette
+   */
   insertRecipe(recipe) {
     return this.collection.insertOne(recipe);
   }
 
-  //TODO augmenter le nombre retourné
-  getRecipes(search) {
-    return this.collection.find({ 'name': new RegExp(search) }).limit(1).toArray();
+  /**
+   * récupère les recettes en fonction d'une requete
+   * 
+   * @param {*} search : requete
+   * @param {*} nb : nombre de recette à retourner
+   */
+  getRecipes(search, nb) {
+    return this.collection.find({ 'name': new RegExp(search) }).limit(nb).toArray();
   }
 
+  /**
+   * retourne une recette selon l'id donné
+   * 
+   * @param {*} id : id de la recette
+   */
   getRecipeById(id) {
     return this.collection.findOne({ _id: new ObjectID(id) });
   }
 
-  getRecipeByDuration( min = 0, max) {
+  /*getRecipeByDuration( min = 0, max, nb) {
+    return this.collection.find({dureation:{$gt>min,$lt<max}}).sort({duration:1}).toArray()
+  }*/
+
+  /**
+   * retourne une liste de recette ayant un temps de préparation entre les borne
+   * 
+   * @param {*} min : durée minimum
+   * @param {*} max : durée maximum
+   * @param {*} nb  : nombre de recette à retourner
+   */
+  getRecipeByDuration( min = 0, max, nb) {
     return this.collection.find().sort({duration:1}).toArray().then((result) => {
       return result.filter((it) => (it.duration >= min && ( max == null || it.duration <= max)));
     });
   }
 
+  /**
+   * retourne une liste de recettes aléatoires
+   * 
+   * @param {*} n 
+   */
   getRandomRecipes(n) {
     return this.collection.find().limit(n).toArray();
   }
 
+  /**
+   * retourne toutes les recettes
+   */
   getAllRecipes() {
     return this.collection.find().toArray().then((result) => {
       return result.map((it) => ({

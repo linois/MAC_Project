@@ -19,6 +19,13 @@ class GraphDAO {
     return this.driver.close();
   }
 
+  /**
+   * ajoute ou modifie une relation LIKED et le noeud USER impliqué
+   * 
+   * @param {*} user : contient les attributs de l'utilisateur
+   * @param {*} recipeId : id de la recette
+   * @param {*} liked : contient les attributs de la relation
+   */
   upsertRecipeLiked(user, recipeId, liked) {
     return this.run(`
       MATCH (m:Recipe {id: $recipeId})
@@ -45,6 +52,12 @@ class GraphDAO {
     });
   }
 
+  /**
+   * retourne une liste des recettes que l'utilsateur a le plus aimé
+   * 
+   * @param {*} userId : id de l'utilisateur
+   * @param {*} nb : nombre de recette à retourner
+   */
   getTopRecipeLiked(userId, nb) {
     return this.run('MATCH (:User{id: $userId})-[l:LIKED]-(r:Recipe) RETURN r,l ORDER BY l.rank DESC LIMIT $nb', {
       userId,
@@ -64,6 +77,12 @@ class GraphDAO {
     });
   }
 
+  /**
+   * retourne les attributs d'une relation LIKED entre un utilisateur et une recette
+   * 
+   * @param {*} userId   : id de l'utilisateur
+   * @param {*} recipeId : id de la recette
+   */
   getRecipeLiked(userId, recipeId) {
     return this.run('MATCH (:User{id: $userId})-[l:LIKED]-(:Recipe{id: $recipeId}) RETURN l', {
       userId,
@@ -80,6 +99,11 @@ class GraphDAO {
     });
   }
 
+  /**
+   * fonction qui retourne une liste des recettes les plus aimés
+   * 
+   * @param {*} topSize : nombre de recette à retourner
+   */
   getTopFamousRecipes(topSize) {
     return this.run('MATCH (:User)-[l:LIKED]-(r:Recipe) RETURN r, count(l.rank) AS vote, avg(l.rank) AS avg ORDER BY avg DESC LIMIT $topSize', {
       topSize,
@@ -97,9 +121,16 @@ class GraphDAO {
     });
   }
 
-  getRecipesByIngredient(ingredientName) {
-    return this.run('MATCH (:Ingredient{name: $ingredientName})-[:USE]-(r:Recipe) RETURN r', {
+  /**
+   * fonction qui retourne une liste des recettes ayant l'ingrédient indiqué
+   * 
+   * @param {*} ingredientName : nom de l'ingredient
+   * @param {*} nb : nombre de recette à retourner
+   */
+  getRecipesByIngredient(ingredientName, nb) {
+    return this.run('MATCH (:Ingredient{name: $ingredientName})-[:USE]-(r:Recipe) RETURN r LIMIT $nb', {
       ingredientName,
+      nb
     }).then((res) => {
       if (res.records.length === 0) return null;
       else {
@@ -108,6 +139,12 @@ class GraphDAO {
     });
   }
 
+  /**
+   * fonction qui ajoute ou modifie une recette
+   * 
+   * @param {*} recipeId : id de la recette
+   * @param {*} recipeName : nom de la recette
+   */
   upsertRecipe(recipeId, recipeName) {
     return this.run('MERGE (r:Recipe{id: $recipeId}) ON CREATE SET r.name = $recipeName RETURN r', {
       recipeId,
@@ -115,6 +152,11 @@ class GraphDAO {
     })
   }
 
+  /**
+   * fonction qui ajoute ou modifie un noeud recette
+   * @param {*} recipeId : id de la recette
+   * @param {*} ingredient : contient attributs d'un ingrédient
+   */
   upsertIngredient(recipeId, ingredient) {
     return this.run(`
       MATCH (r:Recipe{ id: $recipeId })
@@ -128,6 +170,11 @@ class GraphDAO {
     });
   }
 
+  /**
+   * fonction qui récupère les attributs d'un utilisateur
+   * 
+   * @param {*} userId : id de l'utilisateur
+   */
   getUser(userId){
     return this.run(`MATCH (u:User{ id: $userId }) RETURN u`, {
       userId,
@@ -139,6 +186,11 @@ class GraphDAO {
     });
   }
 
+  /**
+   * fonction qui ajoute ou modifie un utilisateur
+   * 
+   * @param {*} user : contient les attributs d'un utilisateur
+   */
   upsertUser(user) {
     return this.run(`
       MERGE (u:User {id: $userId})
@@ -156,9 +208,10 @@ class GraphDAO {
     });
   }
 
+/*
   upsertAdded(userId, recipeId, added) {
     return this.run(`
-      MATCH (m:Recipe{ id: $recipeId })
+      MATCH (r:Recipe{ id: $recipeId })
       MATCH (u:User{ id: $userId })
       MERGE (u)-[r:ADDED]->(m)
         ON CREATE SET r.at = $at
@@ -169,7 +222,14 @@ class GraphDAO {
       at: this.toDate(added.at),
     });
   }
-
+*/
+  /**
+   * fonction qui ajoute ou modifie une relation LIKED
+   * 
+   * @param {*} userId : id de l'utilisateur
+   * @param {*} recipeId : id de la recette
+   * @param {*} liked : attributs d'une relation LIKED
+   */
   upsertRecipeUserLiked(userId, recipeId, liked) {
     return this.run(`
       MATCH (m:Recipe{ id: $recipeId })
@@ -187,7 +247,8 @@ class GraphDAO {
     });
   }
 
-   upsertIngredientLiked(userId, ingredientId, liked) {
+/*
+  upsertIngredientLiked(userId, ingredientId, liked) {
     return this.run(`
       MATCH (g:Ingredient{ id: $ingredientId })
       MATCH (u:User{ id: $userId })
@@ -257,10 +318,34 @@ class GraphDAO {
       subCommentText: comment.text
     });
   }
+*/
 
-  recommendRecipes(userId, nb) {
-   return this.run(`
-      MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(:Ingredient)<-[:USE]-(r:recipe)
+  recommendRecipesByFriendTaste(userId, nb) {
+    return this.run(`
+        MATCH (:User{id: $userId})-[:KNOW]->(friend:User)-[l:LIKED]->(r2:Recipe)
+        WITH r, size((rl)-[:USE]->(:Ingredient)<-[:USE]-(r)) AS nbIngredientShared
+        WHERE l.rank > 3
+        RETURN r, nbIngredientShared
+        ORDER BY nbIngredientShared DESC
+        LIMIT $nb
+      `, {
+        userId,
+        nb,
+    }).then((res) => {
+      console.log(res.records);
+      /*
+      return res.records.map( record => {
+        return {
+          recipe: record.get('r').properties,
+          count: record.get('count'),
+        }
+      });*/
+    });
+  }
+
+  recommendRecipesByIngredient(userId, nb) {
+    return this.run(`
+      MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(:Ingredient)<-[:USE]-(r1:recipe)
       WITH r, size((rl)-[:USE]->(:Ingredient)<-[:USE]-(r)) AS nbIngredientShared
       WHERE l.rank > 3
       RETURN r, nbIngredientShared

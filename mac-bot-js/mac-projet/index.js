@@ -17,7 +17,7 @@ function stripMargin(template, ...expressions) {
 }
 
 /**
- * fonction qui affiche des messages cliquable
+ * fonction qui prépare des message cliquable pour afficher/sélectionner son appréciation
  * 
  * @param {*} recipeId : l'id de la recette
  * @param {*} currentLike : apréciation actuelle
@@ -46,7 +46,7 @@ bot.on('inline_query', (ctx) => {
   }
   const query = ctx.inlineQuery;
   if (query) {
-    documentDAO.getRecipes(query.query).then((recipes) => {
+    documentDAO.getRecipes(query.query, 5).then((recipes) => {
       const answer = recipes.map((recipe) => ({
         id: recipe._id,
         type: 'article',
@@ -64,6 +64,7 @@ bot.on('inline_query', (ctx) => {
           `
         },
       }));
+      console.log(ctx);
       ctx.answerInlineQuery(answer);  
     });
   }
@@ -81,6 +82,7 @@ bot.on('chosen_inline_result', (ctx) => {
   }
 });
 
+//permet aux boutons de la requete inline d'insérer la relation LIKE dans le graphe
 bot.on('callback_query', (ctx) => {
   if (ctx.callbackQuery && ctx.from) {
     const [rank, recipeId] = ctx.callbackQuery.data.split('__');
@@ -95,12 +97,14 @@ bot.on('callback_query', (ctx) => {
       username: 'unknown',
       ...ctx.from,
     }, recipeId, liked).then(() => {
+      console.log(ctx.from);
       ctx.editMessageReplyMarkup(buildLikeKeyboard(recipeId, liked));
     }); 
   }
 });
 
 
+//commande qui donne la liste des commandes et leur utilisation
 bot.command('help', (ctx) => {
   ctx.reply(`
 A recipe bot for the MAC project at the HEIG-VD.
@@ -111,14 +115,16 @@ Use inline queries to ...
   `);
 });
 
+//commande qui donne une description du bot
 bot.command('start', (ctx) => {
   ctx.reply('HEIG-VD Mac project - a recipe bot');
 });
 
+//commande pour la recherche de recettes via des ingrédients
 bot.command('searchByIngredient', (ctx) => {
   const ingredients = ctx.message.text.substr(20).split(',');
   for (ingredientName of ingredients) {
-    graphDAO.getRecipesByIngredient(ingredientName).then( (recipeIds) => {
+    graphDAO.getRecipesByIngredient(ingredientName, 5).then( (recipeIds) => {
       for (const recipeId of recipeIds) {
         documentDAO.getRecipeById(recipeId).then( (recipe) => {
           if (recipe == null) {
@@ -137,8 +143,9 @@ bot.command('searchByIngredient', (ctx) => {
   }
 });
 
+//fonction qui généralise la recherche par durée de préparation
 function searchRecipeByDuration(ctx, min,max) {
-  documentDAO.getRecipeByDuration(min,max).then( (recipes) => {
+  documentDAO.getRecipeByDuration(min,max, 5).then( (recipes) => {
     if (recipes.length === 0) {
       ctx.reply("aucune de nos recettes est dans cette catégorie de temps"); 
     } else {
@@ -154,21 +161,25 @@ function searchRecipeByDuration(ctx, min,max) {
   })
 }
 
+//commande pour rechercher des recette prenant <20min
 bot.command('searchRecipeShort', (ctx) => {
   searchRecipeByDuration(ctx,0,20);
 });
 
+//commande pour rechercher des recette prenant >20min et <60min
 bot.command('searchRecipeMedium', (ctx) => {
   searchRecipeByDuration(ctx,21,60);
 });
 
+//commande pour rechercher des recette prenant >60min
 bot.command('searchRecipeLong', (ctx) => {
   searchRecipeByDuration(ctx,61,null);
 });
 
+//commande pour rechercher les recettes les plus apprécié
 bot.command('searchFamousRecipe', (ctx) => {
   //todo augmenter le top
-  graphDAO.getTopFamousRecipes(1).then( (records) => {
+  graphDAO.getTopFamousRecipes(3).then( (records) => {
     for (const record of records) {
       documentDAO.getRecipeById(record['recipeId']).then( (recipe) => {
         if (recipe == null) {
@@ -188,8 +199,9 @@ bot.command('searchFamousRecipe', (ctx) => {
   });
 });
 
+//commande pour récupéer les recettes que vous avez aimé
 bot.command('searchLikedRecipe', (ctx) => {
-  graphDAO.getTopRecipeLiked( ctx.from.id, 1).then( (records) => {
+  graphDAO.getTopRecipeLiked( ctx.from.id, 3).then( (records) => {
     for (record of records) {
       documentDAO.getRecipeById(record['recipeId']).then( (recipe) => {
         if (recipe == null) {
@@ -208,6 +220,7 @@ bot.command('searchLikedRecipe', (ctx) => {
   }); 
 });
 
+//commande pour faire inverser le booléen végétarian
 bot.command('toggleVegan', (ctx) => {
   if (!ctx.from || !ctx.from.id) {
     ctx.reply('We cannot guess who you are');
@@ -221,12 +234,13 @@ bot.command('toggleVegan', (ctx) => {
   }
 });
 
+//commande pour recevoir une recommandation
 bot.command('recommendrecipes', (ctx) => {
   if (!ctx.from || !ctx.from.id) {
     ctx.reply('We cannot guess who you are');
   } else {
     //augmenter nombre
-    graphDAO.recommendRecipes(ctx.from.id, 1).then((records) => {/*
+    graphDAO.recommendRecipesByFriendTaste(ctx.from.id, 2).then((records) => {/*
       if (records.length === 0) {
         ctx.reply("You haven't liked enough recipes or ingredients to have recommendations");
       } else {
