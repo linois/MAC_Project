@@ -27,11 +27,11 @@ mongo -u mac_user -p mac_project_2020 --authenticationDatabase db-recettes
 
 ## Enregistrement du bot
 
-Vous devez d'abord l'enregistrer sur Telegram, pour cela suivez la documentation.
-Puis enregistrez votre bot sur BotFather
-Ensuite nregistrez les commandes afin que le bot puisse vous les proposer:
-Enfin lancer /setinline et /setinlinefeedback pour que le bot puisse répondre aux requêtes en ligne
-Pour terminer copiez le jeton que le botfather vous a donné et allez sur https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates pour activer le vote actif sur votre bot. 
+1.Vous devez d'abord l'enregistrer sur Telegram, pour cela suivez la documentation.
+1.Puis enregistrez votre bot sur BotFather
+1.Ensuite nregistrez les commandes afin que le bot puisse vous les proposer:
+1.Enfin lancer /setinline et /setinlinefeedback pour que le bot puisse répondre aux requêtes en ligne
+1.Pour terminer copiez le jeton que le botfather vous a donné et allez sur https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates pour activer le vote actif sur votre bot. 
 
 ## Lancement
 
