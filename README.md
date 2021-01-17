@@ -25,4 +25,16 @@ docker exec -it db-recettes bash
 mongo -u mac_user -p mac_project_2020 --authenticationDatabase db-recettes
 ```
 
-Depuis là, vous pouvez faire les opérations voulues sur la db.
+## Enregistrement du bot
+
+Vous devez d'abord l'enregistrer sur Telegram, pour cela suivez la documentation.
+    Enregistrez votre bot sur BotFather
+    Enregistrez les commandes afin que le bot puisse vous les proposer:
+    lancer /setinline et /setinlinefeedback pour que le bot puisse répondre aux requêtes en ligne
+    copiez le jeton que le botfather vous a donné et allez sur https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates pour activer le vote actif sur votre bot. N'oubliez pas de remplacer <VOTRE_TOKEN> par votre jeton actuel
+
+## Lancement
+
+Il vous suffit de lancer les commandes
+`yarn run project-import
+yarn run project-start`
