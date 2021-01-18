@@ -121,7 +121,7 @@ bot.command('start', (ctx) => {
 });
 
 //commande pour la recherche de recettes via des ingrédients
-bot.command('searchByIngredient', (ctx) => {
+bot.command('search_by_ingredient', (ctx) => {
   const ingredients = ctx.message.text.substr(20).split(',');
   for (ingredientName of ingredients) {
     graphDAO.getRecipesByIngredient(ingredientName, 5).then( (recipeIds) => {
@@ -162,22 +162,22 @@ function searchRecipeByDuration(ctx, min,max) {
 }
 
 //commande pour rechercher des recette prenant <20min
-bot.command('searchRecipeShort', (ctx) => {
+bot.command('search_recipe_short', (ctx) => {
   searchRecipeByDuration(ctx,0,20);
 });
 
 //commande pour rechercher des recette prenant >20min et <60min
-bot.command('searchRecipeMedium', (ctx) => {
+bot.command('search_recipe_medium', (ctx) => {
   searchRecipeByDuration(ctx,21,60);
 });
 
 //commande pour rechercher des recette prenant >60min
-bot.command('searchRecipeLong', (ctx) => {
+bot.command('search_recipe_long', (ctx) => {
   searchRecipeByDuration(ctx,61,null);
 });
 
 //commande pour rechercher les recettes les plus apprécié
-bot.command('searchFamousRecipe', (ctx) => {
+bot.command('search_famous_recipe', (ctx) => {
   //todo augmenter le top
   graphDAO.getTopFamousRecipes(3).then( (records) => {
     for (const record of records) {
@@ -200,7 +200,7 @@ bot.command('searchFamousRecipe', (ctx) => {
 });
 
 //commande pour récupéer les recettes que vous avez aimé
-bot.command('searchLikedRecipe', (ctx) => {
+bot.command('search_liked_recipe', (ctx) => {
   graphDAO.getTopRecipeLiked( ctx.from.id, 3).then( (records) => {
     for (record of records) {
       documentDAO.getRecipeById(record['recipeId']).then( (recipe) => {
@@ -221,7 +221,7 @@ bot.command('searchLikedRecipe', (ctx) => {
 });
 
 //commande pour faire inverser le booléen végétarian
-bot.command('toggleVegan', (ctx) => {
+bot.command('toggle_vegan', (ctx) => {
   if (!ctx.from || !ctx.from.id) {
     ctx.reply('We cannot guess who you are');
   } else {
@@ -235,7 +235,7 @@ bot.command('toggleVegan', (ctx) => {
 });
 
 //commande pour recevoir une recommandation
-bot.command('recommendRecipes', (ctx) => {
+bot.command('recommend_recipes', (ctx) => {
   if (!ctx.from || !ctx.from.id) {
     ctx.reply('We cannot guess who you are');
   } else {
