@@ -144,6 +144,7 @@ class GraphDAO {
    * 
    * @param {*} recipeId : id de la recette
    * @param {*} recipeName : nom de la recette
+   * @param {*} isVege : vrai si la recette est végétarienne
    */
   upsertRecipe(recipeId, recipeName, isVege) {
     return this.run('MERGE (r:Recipe{id: $recipeId}) ON CREATE SET r.name = $recipeName, r.isVege = $isVege', {
@@ -267,94 +268,12 @@ class GraphDAO {
     });
   }
 
-/*
-  upsertIngredientLiked(userId, ingredientId, liked) {
-    return this.run(`
-      MATCH (g:Ingredient{ id: $ingredientId })
-      MATCH (u:User{ id: $userId })
-      MERGE (u)-[r:LIKED]->(g)
-      ON CREATE SET r.at = $at,
-                    r.rank = $rank
-      ON MATCH SET  r.at = $at,
-                    r.rank = $rank
-    `, {
-      userId: this.toInt(userId),
-      ingredientId: this.toInt(ingredientId),
-      at: this.toDate(liked.at),
-      rank: liked.rank
-    });
-  }
-
-  upsertRequested(userId, recipeId, requested) {
-    return this.run(`
-      MATCH (m:Recipe{ id: $recipeId })
-      MATCH (u:User{ id: $userId })
-      MERGE (u)-[r:REQUESTED]->(m)
-        ON CREATE SET r.at = $at
-        ON MATCH SET  r.at = $at
-    `, {
-      userId: this.toInt(userId),
-      recipeId,
-      at: this.toDate(requested.at),
-    });
-  }
-
-  upsertCommentAboutRecipe(userId, recipeId, comment) {
-    return this.run(`
-      MATCH (m:Recipe{ id: $recipeId })
-      MATCH (u:User{ id: $userId })
-      MERGE (c:Comment{ id: $commentId })
-        ON CREATE SET c.text = $commentText,
-                      c.at = $commentAt
-        ON MATCH SET  c.text = $commentText,
-                      c.at = $commentAt
-      MERGE (u)-[r:WROTE]->(c)
-      MERGE (c)-[r:ABOUT]->(m)
-    `, {
-      userId: this.toInt(userId),
-      recipeId,
-      commentId: this.toInt(comment.id),
-      commentAt: this.toDate(comment.at),
-      commentText: comment.text
-    });
-  }
-
-  upsertCommentAboutComment(userId, commentId, comment) {
-    return this.run(`
-      MATCH (cc:Comment{ id: $commentId })
-      MATCH (u:User{ id: $userId })
-      MERGE (c:Comment{ id: $subCommentId })
-        ON CREATE SET c.text = $subCommentText,
-                      c.at = $subCommentAt
-        ON MATCH SET  c.text = $subCommentText,
-                      c.at = $subCommentAt
-      MERGE (u)-[r:WROTE]->(c)
-      MERGE (c)-[r:ABOUT]->(cc)
-    `, {
-      userId: this.toInt(userId),
-      commentId: this.toInt(commentId),
-      subCommentId: this.toInt(comment.id),
-      subCommentAt: this.toDate(comment.at),
-      subCommentText: comment.text
-    });
-  }
-*/
-
-  recommendRecipesByFriendTaste(userId, nb) {
-    return this.run(`
-    `, {
-      userId,
-      nb,
-    }).then((res) => {
-      return res.records.map( record => {
-        return {
-          recipe: record.get('recipe'),
-          count: record.get('nbIngredientShared'),
-        }
-      });
-    });
-  }
-
+  /**
+   * fonction qui retourne une liste de recette recommmandées
+   * 
+   * @param {*} userId : id de l'utilisateur
+   * @param {*} nb : nombre de recette à retourner
+   */
   recommendRecipesByIngredient(userId, nb) {
     return this.run(`
       MATCH (:User{id: $userId})-[l:LIKED]->(rl:Recipe)-[:USE]->(i:Ingredient)
@@ -376,14 +295,17 @@ class GraphDAO {
     });
   }
 
+  //convertit en DateTime de Neo4j
   toDate(value) {
     return neo4j.types.DateTime.fromStandardDate(value);
   }
 
+  //convertit en int de Neo4j
   toInt(value) {
     return neo4j.int(value);
   }
 
+  //envoie les requête au container Neo4j
   run(query, params) {
     const session = this.driver.session();
     return new Promise((resolve) => {

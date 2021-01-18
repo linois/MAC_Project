@@ -11,7 +11,7 @@ Le bot de base vous propose de faire des recherche en fonction de ce que vous en
 ### Recherche
 
 Pour effectuer une recherche il vous suffit d'entre ```@duchemin_bot``` dans le chat suivie suivie du nom de la recette voulu. Il cherchera au mieux dans la BDD
-en fonction de ce que vous taperez. Une liste plus ou moins grande vous sera proposés en fonction de la requÃªte, ou rien si la recette n'existe pas dans la BDD.
+en fonction de ce que vous taperez. Une liste plus ou moins grande vous sera proposés en fonction de la requête, ou rien si la recette n'existe pas dans la BDD.
 Vous pourrez sélectionner alors la recette qui apparaitra avec ses détails et vous aurez la possibilité de la noté de 1 à  5 étoile.
 
 Vous pouvez aussi réaliser cette commande dans le chat d'une autre personne pour le proposer la recette. Il verra alors les détails de la recette et pourra aussi la noter.

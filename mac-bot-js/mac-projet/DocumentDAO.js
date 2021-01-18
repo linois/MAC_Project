@@ -44,7 +44,7 @@ class DocumentDAO {
    * @param {*} nb : nombre de recette à retourner
    */
   getRecipes(search, isVege, nb) {
-    return this.collection.find({ 'name': new RegExp(search), 'isVege': isVege }).limit(nb).toArray();
+    return this.collection.find({ 'name': new RegExp(search) }).limit(nb).toArray();
   }
 
   /**
