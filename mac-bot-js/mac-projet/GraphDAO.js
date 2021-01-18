@@ -59,7 +59,10 @@ class GraphDAO {
    * @param {*} nb : nombre de recette à retourner
    */
   getTopRecipeLiked(userId, nb) {
-    return this.run('MATCH (:User{id: $userId})-[l:LIKED]-(r:Recipe) RETURN r,l ORDER BY l.rank DESC LIMIT $nb', {
+    return this.run(`
+      MATCH (:User{id: $userId})-[l:LIKED]-(r:Recipe)
+      RETURN r,l ORDER BY l.rank DESC LIMIT $nb
+    `, {
       userId,
       nb,
     }).then((res) => {
@@ -105,7 +108,11 @@ class GraphDAO {
    * @param {*} topSize : nombre de recette à retourner
    */
   getTopFamousRecipes(topSize) {
-    return this.run('MATCH (:User)-[l:LIKED]-(r:Recipe) RETURN r, count(l.rank) AS vote, avg(l.rank) AS avg ORDER BY avg DESC LIMIT $topSize', {
+    return this.run(`
+      MATCH (:User)-[l:LIKED]-(r:Recipe)
+      RETURN r, count(l.rank) AS vote, avg(l.rank) AS avg
+      ORDER BY avg DESC LIMIT $topSize
+    `, {
       topSize,
     }).then((res) => {
       if (res.records.length === 0) return null;

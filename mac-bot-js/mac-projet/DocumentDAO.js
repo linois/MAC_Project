@@ -44,7 +44,9 @@ class DocumentDAO {
    * @param {*} nb : nombre de recette à retourner
    */
   getRecipes(search, isVege, nb) {
-    return this.collection.find({ 'name': new RegExp(search) }).limit(nb).toArray();
+    return this.collection.find({ 'name': new RegExp(search) }).limit(nb).toArray().then((result) => {
+      return result.filter((it) => (it.duration >= min && ( max == null || it.duration <= max)));
+    });
   }
 
   /**
@@ -55,10 +57,6 @@ class DocumentDAO {
   getRecipeById(id) {
     return this.collection.findOne({ _id: new ObjectID(id) });
   }
-
-  /*getRecipeByDuration( min = 0, max, nb) {
-    return this.collection.find({duration:{$gt>min,$lt<max}}).sort({duration:1}).toArray()
-  }*/
 
   /**
    * retourne une liste de recettes ayant un temps de préparation entre les bornes

@@ -47,7 +47,6 @@ bot.on('inline_query', (ctx) => {
   const query = ctx.inlineQuery;
   if (query) {
     graphDAO.getUser(ctx.from.id).then( (user) => {
-      console.log(user);
       documentDAO.getRecipes(query.query, user.isVege, 5).then((recipes) => {
         const answer = recipes.map((recipe) => ({
           id: recipe._id,
